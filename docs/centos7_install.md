@@ -27,17 +27,50 @@ systemctl enable redis.service
 ##### ZooKeeper
 
 ```bash
+useradd zookeeper
 wget https://archive.cloudera.com/cdh5/one-click-install/redhat/7/x86_64/cloudera-cdh-5-0.x86_64.rpm
 yum --nogpgcheck localinstall cloudera-cdh-5-0.x86_64.rpm
 yum install zookeeper 
 yum install zookeeper-server
 yum install java-1.8.0-openjdk
-
 mkdir -p /var/lib/zookeeper
 chown -R zookeeper /var/lib/zookeeper/
 zookeeper-server-initialize
-zookeeper-server start
 ```
+
+```bash
+nano /etc/systemd/system/zookeeper.service
+```
+
+Add the following to the file:
+
+```bash
+[Unit]
+Description=Apache Zookeeper server 
+Documentation=http://zookeeper.apache.org
+Requires=network.target remote-fs.target 
+After=network.target remote-fs.target
+
+[Service]
+Type=forking
+User=zookeeper
+Group=zookeeper
+ExecStart=/usr/lib/zookeeper/bin/zkServer.sh start
+ExecStop=/usr/lib/zookeeper/bin/zkServer.sh stop
+ExecReload=/usr/lib/zookeeper/bin/zkServer.sh restart
+WorkingDirectory=/var/lib/zookeeper
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+systemctl start zookeeper.service
+systemctl enable zookeeper.service
+```
+
+
+
 
 ##### Kafka
 
@@ -45,11 +78,42 @@ zookeeper-server start
 wget https://archive.apache.org/dist/kafka/0.10.2.1/kafka_2.11-0.10.2.1.tgz
 tar -xvf kafka_2.11-0.10.2.1.tgz
 mv kafka_2.11-0.10.2.1 /opt/
-cd /opt/kafka_2.11-0.10.2.1/
-bin/kafka-server-start.sh config/server.properties
+useradd kafka
+chown -R kafka /opt/kafka_2.11-0.10.2.1/
+ln -s /opt/kafka_2.11-0.10.2.1 /opt/kafka
+chown -h kafka /opt/kafka
+chown -R kafka /tmp/kafka-logs/
 ```
 
-This will run Kakfa in the foreground, use supervisor to run it in the background, a new terminal will need to be opened to continue with the next steps.
+```bash
+nano /etc/systemd/system/kafka.service
+```
+
+Add the following to the file:
+
+```bash
+[Unit]
+Description=Apache Kafka server (broker)
+Documentation=http://kafka.apache.org/documentation.html
+Requires=network.target remote-fs.target 
+After=network.target remote-fs.target zookeeper.service
+
+[Service]
+Type=simple
+User=kafka
+Group=kafka
+Environment=JAVA_HOME=/etc/alternatives/jre
+ExecStart=/opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+ExecStop=/opt/kafka/bin/kafka-server-stop.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+systemctl start kafka.service
+systemctl enable kafka.service
+```
 
 
 ##### InfluxDB
@@ -138,10 +202,11 @@ realStorageUnits 0
 ```
 
 ```bash
-ervice snmpd restart
+service snmpd restart
 chkconfig snmpd on
+systemctl enable snmpd
+systemctl start snmpd
 ```
-
 
 
 ##### Panoptes
