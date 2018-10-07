@@ -18,6 +18,11 @@ yum install epel-release
 
 ##### Redis
 
+```bash
+yum install redis
+systemctl start redis.service
+systemctl enable redis.service
+```
 
 ##### ZooKeeper
 
