@@ -508,6 +508,8 @@ mkdir -p /home/panoptes/log/consumers/influxdb/
 mkdir -p /home/panoptes/plugins/discovery
 mkdir -p /home/panoptes/plugins/polling
 mkdir -p /home/panoptes/plugins/enrichment
+
+chown -R panoptes /home/panoptes/
 ```
 
 
@@ -624,12 +626,34 @@ preload = self:interface
 
 ##### Panoptes Startup
 
-Each of these services will run in the foreground, use supervisor to run it in the background, a new terminal will need to be opened to continue with the next steps.
-Run these as the panoptes user
 
 ```bash
-celery beat -A yahoo_panoptes.discovery.discovery_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler
+nano /etc/systemd/system/yahoo_panoptes_discovery_plugin_scheduler.service
 ```
+
+Add the following to the file:
+
+```bash
+[Unit]
+Description=Celery Service - yahoo_panoptes_discovery_plugin_scheduler
+After=network.target
+
+[Service]
+User=panoptes
+Group=panoptes
+Restart=no
+WorkingDirectory=/home/panoptes/
+ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.discovery.discovery_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+systemctl start yahoo_panoptes_discovery_plugin_scheduler.service
+systemctl enable yahoo_panoptes_discovery_plugin_scheduler.service
+```
+
 
 ```bash
 celery worker -A yahoo_panoptes.discovery.discovery_plugin_agent -l info -f /home/panoptes/log/discovery/agent/discovery_plugin_agent_celery_worker.log -Q discovery_plugin_agent -n discovery_plugin_agent.%h
