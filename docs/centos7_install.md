@@ -610,4 +610,4 @@ SELECT derivative(mean("bits_out__counter"),1s) AS "bits_out" FROM "interface" W
 
 Test by downloading some big files on the local system and check the graphs:
 
-
+<img src="bits.JPG" alt="hi" class="inline"/>
