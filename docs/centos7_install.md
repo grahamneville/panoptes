@@ -1,12 +1,7 @@
 ### System Requirements
 
 The following is an example setup using Centos7.4 as a base OS.
-Services will run in the foreground.
 
-#### To Do:
-
- - Supervisor config to run services in the background
- 
 
 ##### EPEL
 
@@ -670,7 +665,7 @@ CELERY_APP="yahoo_panoptes.discovery.discovery_plugin_agent"
 CELERY_BIN="$ENV_PYTHON /home/panoptes/package/bin/celery"
 CELERYD_NODES="1"
 CELERYD_OPTS="-Q discovery_plugin_agent -n discovery_plugin_agent.%h"
-CELERYD_PID_FILE="/home/panoptes/%N.pid"
+CELERYD_PID_FILE="/home/panoptes/discovery_plugin_agent%N.pid"
 ```
 
 ```bash
@@ -736,36 +731,197 @@ systemctl enable yahoo_panoptes_resource_manager.service
 ###### Enrichment Plugin Scheduler
 
 ```bash
-celery beat -A yahoo_panoptes.enrichment.enrichment_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile eps.pid
+nano /etc/systemd/system/yahoo_panoptes_enrichment_plugin_scheduler.service
+```
+
+Add the following to the file:
+
+```bash
+[Unit]
+Description=Celery Service - yahoo_panoptes_enrichment_plugin_scheduler
+After=yahoo_panoptes_resource_manager.service
+
+[Service]
+User=panoptes
+Group=panoptes
+Restart=no
+WorkingDirectory=/home/panoptes/
+ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.enrichment.enrichment_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile eps.pid'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+systemctl start yahoo_panoptes_enrichment_plugin_scheduler.service
+systemctl enable yahoo_panoptes_enrichment_plugin_scheduler.service
 ```
 
 
 ###### Enrichment Plugin Agent
 
+Setup SNMP site community string. e.g `SET panoptes:secrets:snmp_community_string:local public`
+
 ```bash
-echo 'SET panoptes:secrets:snmp_community_string:local public' | redis-cli
-celery worker -A yahoo_panoptes.enrichment.enrichment_plugin_agent -l info -f /home/panoptes/log/enrichment/agent/enrichment_plugin_agent_celery_worker.log -Q enrichment_plugin_agent -n enrichment_plugin_agent.%h
+echo 'SET panoptes:secrets:snmp_community_string:<site> <string>' | redis-cli
 ```
+
+```bash
+nano /etc/systemd/system/yahoo_panoptes_enrichment_plugin_agent.conf
+```
+
+Add the following to the file:
+
+```bash
+ENV_PYTHON="/home/panoptes/package/bin/python"
+CELERY_APP="yahoo_panoptes.enrichment.enrichment_plugin_agent"
+CELERY_BIN="$ENV_PYTHON /home/panoptes/package/bin/celery"
+CELERYD_NODES="1"
+CELERYD_OPTS="-Q enrichment_plugin_agent -n enrichment_plugin_agent.%h"
+CELERYD_PID_FILE="/home/panoptes/enrichment_plugin_agent%N.pid"
+```
+
+```bash
+nano /etc/systemd/system/yahoo_panoptes_enrichment_plugin_agent.service
+```
+
+Add the following to the file:
+
+```bash
+[Unit]
+Description=Celery Service Enrichment Plugin Agent
+After=yahoo_panoptes_enrichment_plugin_scheduler.service
+
+[Service]
+Type=forking
+User=panoptes
+Group=panoptes
+WorkingDirectory=/home/panoptes/
+EnvironmentFile=-/etc/systemd/system/yahoo_panoptes_enrichment_plugin_agent.conf
+ExecStart=/bin/sh -c '${CELERY_BIN} multi start ${CELERYD_NODES} -A ${CELERY_APP} \
+          --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
+ExecStop=/bin/sh -c '${CELERY_BIN} multi stopwait ${CELERYD_NODES} -A ${CELERY_APP} \
+          --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+systemctl start yahoo_panoptes_enrichment_plugin_agent.service
+systemctl enable yahoo_panoptes_enrichment_plugin_agent.service
+```
+
 
 ###### Polling Plugin Scheduler
 
 ```bash
-celery beat -A yahoo_panoptes.polling.polling_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile pps.pid
+nano /etc/systemd/system/yahoo_panoptes_polling_plugin_scheduler.service
 ```
+
+Add the following to the file:
+
+```bash
+[Unit]
+Description=Celery Service - yahoo_panoptes_polling_plugin_scheduler
+After=yahoo_panoptes_enrichment_plugin_agent.service
+
+[Service]
+User=panoptes
+Group=panoptes
+Restart=no
+WorkingDirectory=/home/panoptes/
+ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.polling.polling_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile pps.pid'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+systemctl start yahoo_panoptes_polling_plugin_scheduler.service
+systemctl enable yahoo_panoptes_polling_plugin_scheduler.service
+```
+
 
 ###### Polling Plugin Agent
 
 ```bash
-celery worker -A yahoo_panoptes.polling.polling_plugin_agent -l info -f /home/panoptes/log/polling/agent/polling_plugin_agent_celery_worker_001.log -Q polling_plugin_agent -n polling_plugin_agent_001.%h -Ofair --max-tasks-per-child 10
+nano /etc/systemd/system/yahoo_panoptes_polling_plugin_agent.conf
 ```
+
+Add the following to the file:
+
+```bash
+ENV_PYTHON="/home/panoptes/package/bin/python"
+CELERY_APP="yahoo_panoptes.polling.polling_plugin_agent"
+CELERY_BIN="$ENV_PYTHON /home/panoptes/package/bin/celery"
+CELERYD_NODES="1"
+CELERYD_OPTS="-Q polling_plugin_agent -n polling_plugin_agent_001.%h -Ofair --max-tasks-per-child=10"
+CELERYD_PID_FILE="/home/panoptes/polling_plugin_agent%N.pid"
+```
+
+```bash
+nano /etc/systemd/system/yahoo_panoptes_polling_plugin_agent.service
+```
+
+Add the following to the file:
+
+```bash
+[Unit]
+Description=Celery Service Polling Plugin Agent
+After=yahoo_panoptes_polling_plugin_scheduler.service
+
+[Service]
+Type=forking
+User=panoptes
+Group=panoptes
+WorkingDirectory=/home/panoptes/
+EnvironmentFile=-/etc/systemd/system/yahoo_panoptes_polling_plugin_agent.conf
+ExecStart=/bin/sh -c '${CELERY_BIN} multi start ${CELERYD_NODES} -A ${CELERY_APP} \
+          --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
+ExecStop=/bin/sh -c '${CELERY_BIN} multi stopwait ${CELERYD_NODES} -A ${CELERY_APP} \
+          --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+systemctl start yahoo_panoptes_polling_plugin_agent.service
+systemctl enable yahoo_panoptes_polling_plugin_agent.service
+```
+
+
+
 
 ###### InfluxDB Consumer
 
 ```bash
-cd ~
-./package/bin/panoptes_influxdb_consumer
+nano /etc/systemd/system/yahoo_panoptes_influxdb_consumer.service
 ```
 
+Add the following to the file:
+
+```bash
+[Unit]
+Description=Panoptes InfluxDB Consumer
+After=yahoo_panoptes_polling_plugin_agent.service
+
+[Service]
+Type=simple
+User=panoptes
+Group=panoptes
+WorkingDirectory=/home/panoptes/
+ExecStart=/bin/sh -c '/home/panoptes/package/bin/panoptes_influxdb_consumer'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+systemctl start yahoo_panoptes_influxdb_consumer.service
+systemctl enable yahoo_panoptes_influxdb_consumer.service
+```
 
 
 ##### Grafana Graph
