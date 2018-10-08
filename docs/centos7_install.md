@@ -732,6 +732,7 @@ Group=panoptes
 WorkingDirectory=/home/panoptes/
 RuntimeDirectory=panoptes
 RuntimeDirectoryMode=0775
+ExecStartPre=/bin/sleep 20
 ExecStart=/bin/sh -c '/home/panoptes/package/bin/panoptes_resource_manager'
 
 [Install]
@@ -817,6 +818,7 @@ WorkingDirectory=/home/panoptes/
 RuntimeDirectory=panoptes
 RuntimeDirectoryMode=0775
 EnvironmentFile=-/etc/systemd/system/yahoo_panoptes_enrichment_plugin_agent.conf
+ExecStartPre=/bin/sleep 20
 ExecStart=/bin/sh -c '${CELERY_BIN} multi start ${CELERYD_NODES} -A ${CELERY_APP} \
           --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
 ExecStop=/bin/sh -c '${CELERY_BIN} multi stopwait ${CELERYD_NODES} -A ${CELERY_APP} \
@@ -900,6 +902,7 @@ WorkingDirectory=/home/panoptes/
 RuntimeDirectory=panoptes
 RuntimeDirectoryMode=0775
 EnvironmentFile=-/etc/systemd/system/yahoo_panoptes_polling_plugin_agent.conf
+ExecStartPre=/bin/sleep 20
 ExecStart=/bin/sh -c '${CELERY_BIN} multi start ${CELERYD_NODES} -A ${CELERY_APP} \
           --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
 ExecStop=/bin/sh -c '${CELERY_BIN} multi stopwait ${CELERYD_NODES} -A ${CELERY_APP} \
@@ -938,6 +941,7 @@ Group=panoptes
 WorkingDirectory=/home/panoptes/
 RuntimeDirectory=panoptes
 RuntimeDirectoryMode=0775
+ExecStartPre=/bin/sleep 20
 ExecStart=/bin/sh -c '/home/panoptes/package/bin/panoptes_influxdb_consumer'
 
 [Install]
