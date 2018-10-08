@@ -621,6 +621,14 @@ preload = self:interface
 
 ##### Panoptes Startup
 
+All PIDs still be stored in /var/run/panoptes
+
+```bash
+mkdir /var/run/panoptes
+chown -R panoptes /var/run/panoptes/
+```
+
+
 ###### Dicovery Plugin Scheduler
 
 ```bash
@@ -639,7 +647,7 @@ User=panoptes
 Group=panoptes
 Restart=no
 WorkingDirectory=/home/panoptes/
-ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.discovery.discovery_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler'
+ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.discovery.discovery_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile=/var/run/panoptes/discovery_plugin_scheduler.pid'
 
 [Install]
 WantedBy=multi-user.target
@@ -665,7 +673,7 @@ CELERY_APP="yahoo_panoptes.discovery.discovery_plugin_agent"
 CELERY_BIN="$ENV_PYTHON /home/panoptes/package/bin/celery"
 CELERYD_NODES="1"
 CELERYD_OPTS="-Q discovery_plugin_agent -n discovery_plugin_agent.%h"
-CELERYD_PID_FILE="/home/panoptes/discovery_plugin_agent%N.pid"
+CELERYD_PID_FILE="/var/run/panoptes/discovery_plugin_agent_%N.pid"
 ```
 
 ```bash
@@ -710,7 +718,8 @@ Add the following to the file:
 ```bash
 [Unit]
 Description=Panoptes Resource Manager
-After=yahoo_panoptes_discovery_plugin_agent.service
+Wants=yahoo_panoptes_discovery_plugin_agent.service kafka.service
+After=yahoo_panoptes_discovery_plugin_agent.service kafka.service
 
 [Service]
 Type=simple
@@ -746,7 +755,7 @@ User=panoptes
 Group=panoptes
 Restart=no
 WorkingDirectory=/home/panoptes/
-ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.enrichment.enrichment_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile eps.pid'
+ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.enrichment.enrichment_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile /var/run/panoptes/enrichment_plugin_scheduler.pid'
 
 [Install]
 WantedBy=multi-user.target
@@ -778,7 +787,7 @@ CELERY_APP="yahoo_panoptes.enrichment.enrichment_plugin_agent"
 CELERY_BIN="$ENV_PYTHON /home/panoptes/package/bin/celery"
 CELERYD_NODES="1"
 CELERYD_OPTS="-Q enrichment_plugin_agent -n enrichment_plugin_agent.%h"
-CELERYD_PID_FILE="/home/panoptes/enrichment_plugin_agent%N.pid"
+CELERYD_PID_FILE="/var/run/panoptes/enrichment_plugin_agent_%N.pid"
 ```
 
 ```bash
@@ -831,7 +840,7 @@ User=panoptes
 Group=panoptes
 Restart=no
 WorkingDirectory=/home/panoptes/
-ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.polling.polling_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile pps.pid'
+ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.polling.polling_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile /var/run/panoptes/polling_plugin_scheduler.pid'
 
 [Install]
 WantedBy=multi-user.target
@@ -857,7 +866,7 @@ CELERY_APP="yahoo_panoptes.polling.polling_plugin_agent"
 CELERY_BIN="$ENV_PYTHON /home/panoptes/package/bin/celery"
 CELERYD_NODES="1"
 CELERYD_OPTS="-Q polling_plugin_agent -n polling_plugin_agent_001.%h -Ofair --max-tasks-per-child=10"
-CELERYD_PID_FILE="/home/panoptes/polling_plugin_agent%N.pid"
+CELERYD_PID_FILE="/var/run/panoptes/polling_plugin_agent_%N.pid"
 ```
 
 ```bash
@@ -905,7 +914,8 @@ Add the following to the file:
 ```bash
 [Unit]
 Description=Panoptes InfluxDB Consumer
-After=yahoo_panoptes_polling_plugin_agent.service
+Wants=yahoo_panoptes_polling_plugin_agent.service kafka.service
+After=yahoo_panoptes_polling_plugin_agent.service kafka.service
 
 [Service]
 Type=simple
