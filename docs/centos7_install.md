@@ -647,6 +647,8 @@ User=panoptes
 Group=panoptes
 Restart=no
 WorkingDirectory=/home/panoptes/
+RuntimeDirectory=panoptes
+RuntimeDirectoryMode=0775
 ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.discovery.discovery_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile=/var/run/panoptes/discovery_plugin_scheduler.pid'
 
 [Install]
@@ -692,6 +694,8 @@ Type=forking
 User=panoptes
 Group=panoptes
 WorkingDirectory=/home/panoptes/
+RuntimeDirectory=panoptes
+RuntimeDirectoryMode=0775
 EnvironmentFile=-/etc/systemd/system/yahoo_panoptes_discovery_plugin_agent.conf
 ExecStart=/bin/sh -c '${CELERY_BIN} multi start ${CELERYD_NODES} -A ${CELERY_APP} \
           --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
@@ -726,6 +730,8 @@ Type=simple
 User=panoptes
 Group=panoptes
 WorkingDirectory=/home/panoptes/
+RuntimeDirectory=panoptes
+RuntimeDirectoryMode=0775
 ExecStart=/bin/sh -c '/home/panoptes/package/bin/panoptes_resource_manager'
 
 [Install]
@@ -755,6 +761,8 @@ User=panoptes
 Group=panoptes
 Restart=no
 WorkingDirectory=/home/panoptes/
+RuntimeDirectory=panoptes
+RuntimeDirectoryMode=0775
 ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.enrichment.enrichment_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile /var/run/panoptes/enrichment_plugin_scheduler.pid'
 
 [Install]
@@ -806,6 +814,8 @@ Type=forking
 User=panoptes
 Group=panoptes
 WorkingDirectory=/home/panoptes/
+RuntimeDirectory=panoptes
+RuntimeDirectoryMode=0775
 EnvironmentFile=-/etc/systemd/system/yahoo_panoptes_enrichment_plugin_agent.conf
 ExecStart=/bin/sh -c '${CELERY_BIN} multi start ${CELERYD_NODES} -A ${CELERY_APP} \
           --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
@@ -840,6 +850,8 @@ User=panoptes
 Group=panoptes
 Restart=no
 WorkingDirectory=/home/panoptes/
+RuntimeDirectory=panoptes
+RuntimeDirectoryMode=0775
 ExecStart=/bin/sh -c '/home/panoptes/package/bin/python /home/panoptes/package/bin/celery beat -A yahoo_panoptes.polling.polling_plugin_scheduler -l info -S yahoo_panoptes.framework.celery_manager.PanoptesCeleryPluginScheduler --pidfile /var/run/panoptes/polling_plugin_scheduler.pid'
 
 [Install]
@@ -885,6 +897,8 @@ Type=forking
 User=panoptes
 Group=panoptes
 WorkingDirectory=/home/panoptes/
+RuntimeDirectory=panoptes
+RuntimeDirectoryMode=0775
 EnvironmentFile=-/etc/systemd/system/yahoo_panoptes_polling_plugin_agent.conf
 ExecStart=/bin/sh -c '${CELERY_BIN} multi start ${CELERYD_NODES} -A ${CELERY_APP} \
           --pidfile=${CELERYD_PID_FILE} --loglevel=INFO ${CELERYD_OPTS}'
@@ -922,6 +936,8 @@ Type=simple
 User=panoptes
 Group=panoptes
 WorkingDirectory=/home/panoptes/
+RuntimeDirectory=panoptes
+RuntimeDirectoryMode=0775
 ExecStart=/bin/sh -c '/home/panoptes/package/bin/panoptes_influxdb_consumer'
 
 [Install]
