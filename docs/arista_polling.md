@@ -361,3 +361,34 @@ class PluginEnrichmentAristaInterface(PluginEnrichmentInterface):
     def get_parent_interface_port_speed(self, index):
         return self.get_parent_interface_configured_speed(index)
 ```
+
+##### Add Arista's to polling plugin
+
+
+```bash
+nano /home/panoptes/plugins/polling/plugin_polling_device_interface_metrics_arista.panoptes-plugin
+```
+
+Add the following to the file:
+
+```bash
+[Core]
+Name = Device Interface Metrics Plugin
+Module = /home/panoptes/package/lib/python2.7/site-packages/yahoo_panoptes/plugins/polling/interface/plugin_polling_device_interface_metrics.py
+
+[Documentation]
+Author = Oath, Inc.
+Version = 0.1
+Website = https://github.com/yahoo/panoptes
+Description = This plugin can poll any device supporting IF-MIB for interface metrics.
+
+[main]
+execute_frequency = 60
+resource_filter = resource_class = "network" AND resource_type = "arista"
+
+[snmp]
+max_repetitions = 25
+
+[enrichment]
+preload = self:interface
+```
