@@ -120,7 +120,7 @@ timeout = 10
 retries = 2
 ```
 
-``bash
+```bash
 nano /home/panoptes/plugins/enrichment/interface/plugin_enrichment_interface.py
 ```
 
