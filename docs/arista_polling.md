@@ -74,7 +74,7 @@ The contents should be like so, where localhost was already added and the new sw
 ##### Add Arista interface enrichment plugin
 
 ```bash
-nano plugins/enrichment/__init__.py
+nano /home/panoptes/plugins/enrichment/__init__.py
 ```
 
 Add the following to the file:
