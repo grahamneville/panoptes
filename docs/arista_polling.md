@@ -2,10 +2,6 @@ The following is an example of polling an Arista vEOS switch.
 This assumes panoptes is already setup.
 
 Arista vEOS 4.20.7M was used for testing
-
-#### To Do:
-
- -  
  
 
 ##### vEOS
@@ -142,3 +138,23 @@ max_repetitions = 25
 [enrichment]
 preload = self:interface
 ```
+
+
+
+##### Grafana Graph
+
+Browse to http://serverip:3000
+Add a new graph with these two queries:
+
+```
+SELECT derivative(mean("total_packets_in__counter"),1s) AS "packets_in" FROM "interface" WHERE ("resource_endpoint" = '<device_ip>' AND "interface_name" = 'Management1') AND $timeFilter GROUP BY time($__interval) fill(none)
+
+
+SELECT derivative(mean("total_packets_out__counter"),1s) AS "packets_out" FROM "interface" WHERE ("resource_endpoint" = '<device_ip>' AND "interface_name" = 'Management1') AND $timeFilter GROUP BY time($__interval) 
+```
+
+Test by downloading some big files on the local system and check the graphs:
+
+<img src="arista_pps.JPG" alt="hi" class="inline"/>
+
+Note: It seems veos doesn't record bits_in or bits_out, values are always zero hence the graph is just showing packets per second. This shouldn't be a problem on real world kit
